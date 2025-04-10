@@ -9,25 +9,28 @@
 #include"options.h"
 #include"button.h"
 #include"menu.h"
+#include"help.h"
+#include<string>
+#include<vector>
 
-GameState ShowHelp(SDL_Renderer* renderer); // forward declaration
+using namespace std;
+
 
 
 int main(int argc, char* argv[]) {
-    // Khởi tạo SDL
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cerr << "SDL_Init Failed: " << SDL_GetError() << std::endl;
         return -1;
     }
 
-    // Khởi tạo SDL_image
+    //SDL_image
     if (!(IMG_Init(IMG_INIT_PNG) & IMG_INIT_PNG)) {
         std::cerr << "IMG_Init Failed: " << IMG_GetError() << std::endl;
         SDL_Quit();
         return -1;
     }
 
-    // Khởi tạo SDL_ttf
+    //SDL_ttf
     if (TTF_Init() != 0) {
         std::cerr << "TTF_Init Failed: " << TTF_GetError() << std::endl;
         IMG_Quit();
@@ -48,7 +51,7 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // Tạo renderer
+    //renderer
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         std::cerr << "SDL_CreateRenderer Failed: " << SDL_GetError() << std::endl;
@@ -59,7 +62,6 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // Quản lý trạng thái game
     GameState currentState = GameState::MENU;
     bool running = true;
 
@@ -69,13 +71,13 @@ int main(int argc, char* argv[]) {
                 currentState = ShowMenu(renderer);
                 break;
             case GameState::GAMEPLAY:
-                currentState = RunGame(renderer);
+                //currentState = RunGame(renderer);
                 break;
             case GameState::HELP:
                 currentState = ShowHelp(renderer);
                 break;
             case GameState::OPTIONS:
-                currentState = ShowOptions(renderer);
+                //currentState = ShowOptions(renderer);
                 break;
             case GameState::QUIT:
                 running = false;
