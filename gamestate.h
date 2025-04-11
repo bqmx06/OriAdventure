@@ -8,5 +8,14 @@ enum class GameState {
     OPTIONS,
     QUIT
 };
+enum class Difficulty {
+    Easy,
+    Medium,
+    Hard
+};
+enum class Color {
+    Blue,
+    Pink
+};
 
 #endif // GAMESTATE_H

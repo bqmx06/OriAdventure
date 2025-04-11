@@ -13,7 +13,9 @@ struct Button {
     TTF_Font* font = nullptr;
     SDL_Texture* textTexture = nullptr;
     SDL_Rect textRect;
-
+    SDL_Color normalTextColor = {255,255,255,255};
+    SDL_Color selectedTextColor = {255, 215, 0, 255}; // Yellow
+    SDL_Color textColor=normalTextColor;
     void init(SDL_Renderer* renderer, TTF_Font* font_, const string& text, int x, int y, int w, int h) {
         rect = { x, y, w, h };
         font = font_;
@@ -24,7 +26,7 @@ struct Button {
     void updateTexture(SDL_Renderer* renderer) {
         if (textTexture) SDL_DestroyTexture(textTexture);
 
-        SDL_Surface* textSurface = TTF_RenderText_Solid(font, label.c_str(), {255, 255, 255});
+        SDL_Surface* textSurface = TTF_RenderText_Solid(font, label.c_str(),textColor);
         textTexture = SDL_CreateTextureFromSurface(renderer, textSurface);
         textRect = { rect.x + (rect.w - textSurface->w) / 2, rect.y + (rect.h - textSurface->h) / 2, textSurface->w, textSurface->h };
         SDL_FreeSurface(textSurface);
@@ -54,6 +56,7 @@ struct Button {
             SDL_RenderCopy(renderer, textTexture, nullptr, &textRect);
         }
     }
+   
 
     void destroy() {
         if (textTexture) {

@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include"defs.h"
-#include"graphics.h"
 #include"game.h"
 #include"options.h"
 #include"button.h"
@@ -15,6 +14,8 @@
 
 using namespace std;
 
+Difficulty currentDifficulty = Difficulty::Easy;
+Color gameColor=Color::Pink;
 
 
 int main(int argc, char* argv[]) {
@@ -77,7 +78,7 @@ int main(int argc, char* argv[]) {
                 currentState = ShowHelp(renderer);
                 break;
             case GameState::OPTIONS:
-                //currentState = ShowOptions(renderer);
+                currentState = ShowOptions(renderer);
                 break;
             case GameState::QUIT:
                 running = false;
