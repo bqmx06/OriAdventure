@@ -26,7 +26,7 @@ GameState ShowMenu(SDL_Renderer* renderer) {
         SDL_Log("Failed to load menu background: %s", IMG_GetError());
     }
     
-    // Vòng lặp menu
+   
     while (true) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) goto exit_menu;

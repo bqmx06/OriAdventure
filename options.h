@@ -49,7 +49,6 @@ GameState ShowOptions(SDL_Renderer* renderer) {
 
 
     bool showVolumeSlider = false;
-    int volume = 62;
     SDL_Rect volumeBar = {400, volumeY + 20, 300, 20}; 
     SDL_Rect volumeFill = {400, volumeY + 20, volume * 3, 20};
 
@@ -184,6 +183,7 @@ GameState ShowOptions(SDL_Renderer* renderer) {
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
+        cerr<<volume<<endl;
     }
 
 exit_options:

@@ -17,7 +17,6 @@ using namespace std;
 Difficulty currentDifficulty = Difficulty::Easy;
 Color gameColor=Color::Pink;
 
-
 int main(int argc, char* argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cerr << "SDL_Init Failed: " << SDL_GetError() << std::endl;
@@ -72,7 +71,7 @@ int main(int argc, char* argv[]) {
                 currentState = ShowMenu(renderer);
                 break;
             case GameState::GAMEPLAY:
-                //currentState = RunGame(renderer);
+                currentState = RunGame(renderer);
                 break;
             case GameState::HELP:
                 currentState = ShowHelp(renderer);
