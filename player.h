@@ -9,15 +9,6 @@
 using namespace std;
 
 
-class AnimationData {
-public:
-    int frameCount; // Number of frames in the animation
-    int row;  
-    int frameSpeed;      // Row number in the spritesheet for the animation
-
-    AnimationData(int frameCount = 1, int row = 0,int frameSpeed = 10)
-        : frameCount(frameCount), row(row), frameSpeed(frameSpeed) {}
-};
 
 
 
@@ -38,13 +29,15 @@ public:
     SDL_Texture* texture;
 
     // Animation-related members
-    AnimationData animations[6] = {
+    AnimationData animations[8] = {
         {8, 0, 10},  // IDLE: 8 frames, row 0
         {7, 1, 10},  // RUNNING: 7 frames, row 1
         {10, 2, 6}, // JUMPING: 10 frames, row 2
         {5, 3, 5},  // PUNCHING: 5 frames, row 3
         {5, 4, 5},  // KICKING: 5 frames, row 4
-        {3, 5, 5}   // DASHING: 3 frames, row 5
+        {3, 5, 5},   // DASHING: 3 frames, row 5
+        {2, 6, 10},  //HURT
+        {8, 7, 10}  //DEAD
     };
     int currentFrame;
     int frameTimer;
@@ -83,7 +76,7 @@ public:
         if (y + height > GROUND_HEIGHT) {
             y = GROUND_HEIGHT - height;
             vy = 0;
-            if (currentState == PlayerState::JUMPING) {
+            if (isJumping) {
                 isJumping = false;
                 const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
                 if (currentKeyStates[SDL_SCANCODE_RIGHT]||currentKeyStates[SDL_SCANCODE_LEFT]) {
@@ -96,7 +89,6 @@ public:
         // Handle dash
         if (currentState == PlayerState::DASHING) {
             Uint32 currentDashTime = SDL_GetTicks();
-            cerr<<currentDashTime<<" "<<dashStartTime<<endl;
             if (currentDashTime - dashStartTime > dashDuration) {
                 const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
                 if (currentKeyStates[SDL_SCANCODE_RIGHT]||currentKeyStates[SDL_SCANCODE_LEFT]) {
@@ -111,7 +103,15 @@ public:
         }
 
 
-
+        //handle hurt dead
+        if (currentState == PlayerState::DEAD) {
+            if (frameTimer >= animations[(int)(currentState)].frameSpeed) {
+                frameTimer = 0;
+                if (currentFrame < animations[(int)(currentState)].frameCount - 1) {
+                    currentFrame++;
+                }
+            }
+        }
  
         if(currentState == PlayerState::JUMPING){
             float v0=fabs(JUMPFORCE);
@@ -165,7 +165,7 @@ public:
                     setState(PlayerState::RUNNING);
                     break;
                 case SDLK_UP:
-                    if (!isJumping) {
+                    if (!isJumping&&currentState!=PlayerState::DASHING) {
                         vy = JUMPFORCE;
                         setState(PlayerState::JUMPING);
                         isJumping=true;
@@ -185,6 +185,12 @@ public:
                     vx=facingLeft?-3*SPEED:3*SPEED;
                     dashStartTime=SDL_GetTicks();}
                     break;
+                case SDLK_v:
+                    setState(PlayerState::HURT);
+                    break;
+                case SDLK_b:
+                    setState(PlayerState::DEAD);
+                    break;
                 default:
                     break;
             }
@@ -192,17 +198,25 @@ public:
         if (event.type == SDL_KEYUP && event.key.repeat == 0) {
             switch (event.key.keysym.sym) {
                 case SDLK_LEFT:
-                case SDLK_RIGHT:
+                    if(!SDL_GetKeyboardState(NULL)[SDL_SCANCODE_RIGHT]){
                     vx=0;
                     if(!isJumping)
-                    setState(PlayerState::IDLE);
+                    setState(PlayerState::IDLE);}
                     break;
+                case SDLK_RIGHT:
+                    if(!SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LEFT]){
+                    vx=0;
+                    if(!isJumping)
+                    setState(PlayerState::IDLE);}
+                    break;
+                case SDLK_v:
                 case SDLK_x:
                 case SDLK_c:{
+                    if(!SDL_GetKeyboardState(NULL)[SDL_SCANCODE_RIGHT]&&!SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LEFT]){
                     if(isJumping)
                     setState(PlayerState::JUMPING);
                     else
-                    setState(PlayerState::IDLE);
+                    setState(PlayerState::IDLE);}
                     break;}                    
                 default:
                     break;

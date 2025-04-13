@@ -6,7 +6,8 @@ enum class GameState {
     GAMEPLAY,
     HELP,
     OPTIONS,
-    QUIT
+    QUIT,
+    GAMEOVER
 };
 enum class Difficulty {
     Easy,
@@ -23,7 +24,9 @@ enum class PlayerState {
     JUMPING,
     PUNCHING,
     KICKING,
-    DASHING
+    DASHING,
+    HURT,
+    DEAD
 };
 class PlayerStateManager {
     public:
@@ -38,5 +41,33 @@ class PlayerStateManager {
     
     private:
         PlayerState currentState; };
+enum class MonsterState {
+    WALKING,
+    ATTACKING,
+    HURT,
+    DEAD
+};
+class MonsterStateManager {
+    public:
+        
+        MonsterStateManager() : currentState(MonsterState::WALKING) {}
+    
+        
+        void setState(MonsterState newState){ currentState = newState;}
+    
+        
+        MonsterState getState() const { return currentState; }
+    
+    private:
+        MonsterState currentState; };
+class AnimationData {
+    public:
+        int frameCount; // Number of frames in the animation
+        int row;  
+        int frameSpeed;      // Row number in the spritesheet for the animation
 
+        AnimationData(int frameCount = 1, int row = 0,int frameSpeed = 10)
+            : frameCount(frameCount), row(row), frameSpeed(frameSpeed) {}
+};
+        
 #endif // GAMESTATE_H
