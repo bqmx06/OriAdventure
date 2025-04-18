@@ -15,23 +15,24 @@ using namespace std;
 class Player {
 public:
     //rect
-    int x, y;
     int width=90, height=111;
-
+    int x, y;
     // Movement velocity
     float vx, vy;
     //bool
     bool facingLeft=false;
     bool isJumping=false;
+    bool isAttacked=false;
     Uint32 dashDuration=200;
     Uint32 dashStartTime=0;
+
     // Spritesheet texture
     SDL_Texture* texture;
 
     // Animation-related members
     AnimationData animations[8] = {
         {8, 0, 10},  // IDLE: 8 frames, row 0
-        {7, 1, 10},  // RUNNING: 7 frames, row 1
+        {7, 1, 5},  // RUNNING: 7 frames, row 1
         {10, 2, 6}, // JUMPING: 10 frames, row 2
         {5, 3, 5},  // PUNCHING: 5 frames, row 3
         {5, 4, 5},  // KICKING: 5 frames, row 4
@@ -46,7 +47,7 @@ public:
     // Constructor
     Player(SDL_Renderer* renderer)
         : x(SCREEN_WIDTH / 2),
-          y(GROUND_HEIGHT), 
+          y(GROUND_HEIGHT-height), 
           width(90), 
           height(111), 
           vx(0), vy(0),
@@ -54,7 +55,8 @@ public:
           currentFrame(0),
           frameTimer(0), 
           currentState(PlayerState::IDLE)
-    {}
+    {   
+    }
 
     // Destructor
     ~Player() {
@@ -65,6 +67,7 @@ public:
 
     // Update player's position and animation
     void update() {
+ 
         const float gravity = 0.5f;
         // Apply gravity
         vy += gravity;
@@ -86,6 +89,18 @@ public:
                 }
             }
         }
+        
+        // attacked
+    
+        if(currentState==PlayerState::IDLE||currentState==PlayerState::RUNNING||currentState==PlayerState::JUMPING)
+        {   if (isAttacked)
+            {
+                setState(PlayerState::HURT);
+            }
+        }
+        cerr<<"Update isAttacked: "<<isAttacked<<endl;
+
+        
         // Handle dash
         if (currentState == PlayerState::DASHING) {
             Uint32 currentDashTime = SDL_GetTicks();
@@ -127,15 +142,36 @@ public:
         }
         if (frameTimer >= animations[(int)(currentState)].frameSpeed) {
             frameTimer = 0;
-            currentFrame = (currentFrame + 1) % animations[(int)(currentState)].frameCount;
+        
+            if (currentState == PlayerState::HURT) {
+                if (currentFrame < animations[(int)(currentState)].frameCount - 1) {
+                    currentFrame++;
+                } else {
+                    // Đã chạy hết 1 vòng animation HURT → chuyển trạng thái
+                    isAttacked = false;
+                    const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
+                    if (currentKeyStates[SDL_SCANCODE_RIGHT] || currentKeyStates[SDL_SCANCODE_LEFT]) {
+                        setState(PlayerState::RUNNING);
+                    } else {
+                        setState(PlayerState::IDLE);
+                    }
+                }
+            }
+            else {
+                currentFrame = (currentFrame + 1) % animations[(int)(currentState)].frameCount;
+            }
         }
+   
+   
+   
     }
+
 
 
     void render(SDL_Renderer* renderer) {
         if (!texture) return;
         const AnimationData& anim = animations[(int)(currentState)];
-        cerr<< (int)currentState<<endl;
+        //cerr<< (int)currentState<<endl;
         
         SDL_Rect clip = {
             currentFrame * width, 

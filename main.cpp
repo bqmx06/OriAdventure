@@ -2,6 +2,8 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
 
 #include"defs.h"
 #include"game.h"
@@ -61,7 +63,7 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return -1;
     }
-
+    
     GameState currentState = GameState::MENU;
     bool running = true;
 
