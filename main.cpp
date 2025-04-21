@@ -9,7 +9,7 @@
 #include"game.h"
 #include"options.h"
 #include"button.h"
-#include"menu.h"
+#include"menu.h" 
 #include"help.h"
 #include<string>
 #include<vector>
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return -1;
     }
-    
+
     GameState currentState = GameState::MENU;
     bool running = true;
 

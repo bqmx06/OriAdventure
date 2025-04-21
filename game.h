@@ -24,7 +24,7 @@ inline GameState RunGame(SDL_Renderer* renderer) {
     
     Background background(renderer);
     background.texture=IMG_LoadTexture(renderer, BG_IMAGE_PATH);
-
+    background.generatePlatforms(renderer); // Sinh nền tảng ngẫu nhiên cho màn đầu tiên
     const char* selectedTexture=gameColor==Color::Pink?PLAYER_SPRITE_PATH:PLAYER_SPRITE_PATH_BLUE;
     Player player(renderer);
     player.texture = IMG_LoadTexture(renderer, selectedTexture);
@@ -32,34 +32,37 @@ inline GameState RunGame(SDL_Renderer* renderer) {
     Monster monster(renderer);
     monster.texture = IMG_LoadTexture(renderer, MONSTER_SPRITE_PATH);
 
-    Uint32 lastAsteroidBatchTime = SDL_GetTicks();
+
     SDL_Texture* asteroidTexture=IMG_LoadTexture(renderer, ASTEROID_PATH);
-    std::vector<Asteroid> asteroids;
+    Uint32 lastAsteroidBatchTime = SDL_GetTicks();
+    vector<Asteroid> asteroids;
+
+    for (int i = 0; i < ASTEROID; ++i) {
+        Asteroid asteroid(renderer);
+        asteroid.texture = asteroidTexture;
+        asteroid.active = false;
+        asteroids.push_back(asteroid);
+    }
+
+
 
     while (!quit) {
         while (SDL_PollEvent(&event)) {
-            if (event.type == SDL_QUIT) {
-                quit = true;
-            }
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) {
-                quit = true; 
-            }
-
-         
+            if (event.type == SDL_QUIT) quit = true;
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) quit = true;
             player.handleEvent(event);
         }
-
+        
         Uint32 currentTime = SDL_GetTicks();
-            if (currentTime - lastAsteroidBatchTime >= 500) {  // mỗi 0.5 giây
-                int startX = rand() % (SCREEN_WIDTH-96*3)+SCREEN_WIDTH/3; // tạo batch không vượt màn hình
-                for (int i = 0; i < ASTEROID; ++i) {
-                    Asteroid asteroid(renderer);
-                    asteroid.x = startX + i * asteroid.width;
-                    asteroid.texture = asteroidTexture;
-                    asteroids.push_back(asteroid);
+        if (currentTime - lastAsteroidBatchTime >= 4000) { 
+            int startX = rand() % (SCREEN_WIDTH - 96 * 3);
+            for (auto& asteroid : asteroids) {
+                if (!asteroid.active) {
+                    asteroid.active = true;
                 }
-                lastAsteroidBatchTime = currentTime;
             }
+            lastAsteroidBatchTime = currentTime;
+        }
         for (auto& asteroid : asteroids) {
             asteroid.update(player);
         }
@@ -67,11 +70,16 @@ inline GameState RunGame(SDL_Renderer* renderer) {
         
         monster.update();
         monster.handle(player);
+        
+        for (auto& asteroid : asteroids) {
+            asteroid.handle(player);
+        }
         background.handle(player);
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
         SDL_RenderClear(renderer);                    
         
-        background.render(renderer);
+        background.render(renderer);        // Vẽ nền
+        background.renderPlatforms(renderer); // Vẽ các nền tảng
         player.render(renderer); 
         monster.render(renderer);
         for (auto& asteroid1 : asteroids) {
@@ -81,6 +89,7 @@ inline GameState RunGame(SDL_Renderer* renderer) {
 
         SDL_RenderPresent(renderer); 
         SDL_Delay(10); 
+        //cerr<<player.isAttacked<<endl;
     }
     TTF_CloseFont(font);
     SDL_DestroyTexture(asteroidTexture);

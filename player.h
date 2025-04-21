@@ -6,14 +6,15 @@
 #include <iostream>
 #include "defs.h" 
 #include "math.h"
+#include <vector>
 using namespace std;
-
 
 
 
 
 class Player {
 public:
+int time1=0;
     //rect
     int width=90, height=111;
     int x, y;
@@ -23,8 +24,14 @@ public:
     bool facingLeft=false;
     bool isJumping=false;
     bool isAttacked=false;
+    //bool onGround=false;
+    //dash
     Uint32 dashDuration=200;
     Uint32 dashStartTime=0;
+    //hurt
+    bool isInvincible = false; // Kiểm tra nhân vật có miễn nhiễm hay không
+    Uint32 invincibleStartTime = 0; // Thời điểm bắt đầu miễn nhiễm
+    Uint32 invincibleDuration = 1500; // Thời gian miễn nhiễm (1000ms = 1 giây)
 
     // Spritesheet texture
     SDL_Texture* texture;
@@ -67,12 +74,21 @@ public:
 
     // Update player's position and animation
     void update() {
- 
         const float gravity = 0.5f;
         // Apply gravity
         vy += gravity;
         x += (int)(vx);
         y += (int)(vy);
+
+        
+
+        //zone
+        if(x<LEFTZONE)
+        {x=LEFTZONE;
+        vx=0;}
+        if(x>RIGHTZONE)
+        {x=RIGHTZONE;
+        vx=0;}
         // frame
         frameTimer ++;
         // Handle ground collision
@@ -89,16 +105,22 @@ public:
                 }
             }
         }
-        
+        if (isInvincible) {
+            Uint32 currentTime = SDL_GetTicks();
+            if (currentTime - invincibleStartTime > invincibleDuration) {
+                isInvincible = false; // Hết thời gian miễn nhiễm
+            }
+        }
         // attacked
     
-        if(currentState==PlayerState::IDLE||currentState==PlayerState::RUNNING||currentState==PlayerState::JUMPING)
+        if((!isInvincible)&&(currentState==PlayerState::IDLE||currentState==PlayerState::RUNNING||currentState==PlayerState::JUMPING))
         {   if (isAttacked)
-            {
+            {   
+                time1++;
                 setState(PlayerState::HURT);
             }
         }
-        cerr<<"Update isAttacked: "<<isAttacked<<endl;
+        //cerr<<"Update isAttacked: "<<isAttacked<<endl;
 
         
         // Handle dash
@@ -116,8 +138,6 @@ public:
                 
             }
         }
-
-
         //handle hurt dead
         if (currentState == PlayerState::DEAD) {
             if (frameTimer >= animations[(int)(currentState)].frameSpeed) {
@@ -127,7 +147,6 @@ public:
                 }
             }
         }
- 
         if(currentState == PlayerState::JUMPING){
             float v0=fabs(JUMPFORCE);
             float maxHeight = (v0 * v0) / (2 * gravity);  
@@ -142,13 +161,12 @@ public:
         }
         if (frameTimer >= animations[(int)(currentState)].frameSpeed) {
             frameTimer = 0;
-        
             if (currentState == PlayerState::HURT) {
                 if (currentFrame < animations[(int)(currentState)].frameCount - 1) {
                     currentFrame++;
                 } else {
-                    // Đã chạy hết 1 vòng animation HURT → chuyển trạng thái
-                    isAttacked = false;
+                    //cerr << "Resetting isAttacked at: " << SDL_GetTicks() << endl;
+                    isAttacked = false; // Reset trạng thái bị tấn công
                     const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
                     if (currentKeyStates[SDL_SCANCODE_RIGHT] || currentKeyStates[SDL_SCANCODE_LEFT]) {
                         setState(PlayerState::RUNNING);
@@ -161,12 +179,7 @@ public:
                 currentFrame = (currentFrame + 1) % animations[(int)(currentState)].frameCount;
             }
         }
-   
-   
-   
     }
-
-
 
     void render(SDL_Renderer* renderer) {
         if (!texture) return;
@@ -190,18 +203,20 @@ public:
             switch (event.key.keysym.sym) {
                 case SDLK_LEFT:
                     facingLeft=true;
+                    if(x>=LEFTZONE)
                     vx = -SPEED;
                     if(!isJumping)
                     setState(PlayerState::RUNNING);
                     break;
                 case SDLK_RIGHT:
                     facingLeft=false;
+                    if(x<=RIGHTZONE)
                     vx = SPEED;
                     if(!isJumping)
                     setState(PlayerState::RUNNING);
                     break;
                 case SDLK_UP:
-                    if (!isJumping&&currentState!=PlayerState::DASHING) {
+                    if (!isJumping && currentState != PlayerState::DASHING) { 
                         vy = JUMPFORCE;
                         setState(PlayerState::JUMPING);
                         isJumping=true;
@@ -260,11 +275,22 @@ public:
         }
     }
     void setState(PlayerState state) {
+       
         if (currentState != state) {
             currentState = state;
             currentFrame = 0;
             frameTimer = 0;
+            if (state == PlayerState::HURT) {
+                isAttacked = true;
+                isInvincible = true; 
+                invincibleStartTime = SDL_GetTicks();
+            }
         }
+    }
+    bool nextStage(){
+        bool atRightZone=(x>=RIGHTZONE-width);
+        bool clearStage=false;
+        return atRightZone&clearStage;
     }
 };
 

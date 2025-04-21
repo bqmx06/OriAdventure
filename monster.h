@@ -99,7 +99,6 @@ public:
     }
  
 	void handle(Player& player) {
-        player.isAttacked = false;
         int playerCenter = player.x + player.width / 2;
         int monsterCenter = x + width / 2;
         int distance = abs(monsterCenter - playerCenter);
@@ -120,21 +119,13 @@ public:
     }
     // Attack logic (ví dụ quái vật tấn công trong khoảng thời gian nhất định)
     void attack(Player& player) {
-        
-    
         Uint32 currentTime = SDL_GetTicks();
         if (currentTime - lastAttackTime > attackCooldown) {
             lastAttackTime = currentTime;
-            setState(MonsterState::ATTACKING);
-            //cerr << "[MONSTER ATTACK]\n";
-            //cerr << "Monster - x: " << x << ", y: " << y << ", w: " << width << ", h: " << height << endl;
-            //cerr << "Player  - x: " << player.x << ", y: " << player.y << ", w: " << player.width << ", h: " << player.height << endl;
-    
+            setState(MonsterState::ATTACKING);    
         }
         if(currentState==MonsterState::ATTACKING&&currentFrame==8)
         player.isAttacked=true;
-        //cerr<<"Monster isAttacked: "<<player.isAttacked<<endl;
-        
     }
     
 };
