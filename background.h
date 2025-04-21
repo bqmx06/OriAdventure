@@ -30,11 +30,9 @@ struct Platform {
                 }
 			}
 		}
-		
-		// Nếu cần thêm logic xử lý khác cho platform (như di chuyển hoặc thay đổi trạng thái), có thể thêm ở đây
 	}
 
-	// Hàm kiểm tra va chạm với player
+
 	bool checkCollision(const Player& player) {
 		bool verticalCheck = player.vy >= 0 &&  // đang rơi xuống
 			player.y + player.height <= y + 15 && // chạm trong khoảng 20px
@@ -60,11 +58,12 @@ class Background {
 		SDL_DestroyTexture(platform.texture);
     }
 	void handle(Player& player) {
-		if (player.vx != 0 && !player.nextStage()) {
+		if (player.vx != 0) {
 			int deltaX = player.vx/BG_SPEED;
 			x -= deltaX; // Di chuyển nền
-	
-			// Di chuyển tất cả các platform cùng nền
+			if(x>0) x=0;
+			else if(x<-1200) x=-1200;
+			else
 			for (auto& platform : platforms) {
 				platform.x -= deltaX;
 			}
@@ -82,11 +81,11 @@ class Background {
 	
 	void generatePlatforms(SDL_Renderer* renderer) {
 		platforms.clear(); 
-		int numPlatforms = 5 + rand() % 5; // Số lượng platform ngẫu nhiên (5-10)
+		int numPlatforms = 10 + rand() % 15; // Số lượng platform ngẫu nhiên (5-10)
 		for (int i = 0; i < numPlatforms; i++) {
 			int platformWidth = 100 + rand() % 200; // Rộng từ 100-300
 			int platformHeight = 20; // Chiều cao cố định
-			int platformX = -600 + rand() % 2400; // X trong khoảng -600 đến 1800
+			int platformX = -1800 + rand() % 3600; // X trong khoảng -600 đến 1800
 			int platformY = 200 + rand() % (SCREEN_HEIGHT - 400); // Y từ 200 đến SCREEN_HEIGHT - 200
 
 			SDL_Texture* platformTexture = IMG_LoadTexture(renderer, "platform.png"); // Tải texture platform
@@ -104,7 +103,24 @@ class Background {
 		}
 	}
 
-
+	void reset(SDL_Renderer* renderer) {
+		// Reset lại vị trí background
+		x = -(BG_WIDTH - SCREEN_WIDTH) / 2;
+		y = 0;
+	
+		// Hủy texture cũ của các platform
+		for (auto& platform : platforms) {
+			if (platform.texture) {
+				SDL_DestroyTexture(platform.texture);
+				platform.texture = nullptr;
+			}
+		}
+		platforms.clear();
+	
+		// Tạo lại platform mới
+		generatePlatforms(renderer);
+	}
+	
 
 
 

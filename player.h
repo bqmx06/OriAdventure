@@ -14,7 +14,6 @@ using namespace std;
 
 class Player {
 public:
-int time1=0;
     //rect
     int width=90, height=111;
     int x, y;
@@ -24,14 +23,19 @@ int time1=0;
     bool facingLeft=false;
     bool isJumping=false;
     bool isAttacked=false;
-    //bool onGround=false;
     //dash
     Uint32 dashDuration=200;
     Uint32 dashStartTime=0;
     //hurt
     bool isInvincible = false; // Kiểm tra nhân vật có miễn nhiễm hay không
     Uint32 invincibleStartTime = 0; // Thời điểm bắt đầu miễn nhiễm
-    Uint32 invincibleDuration = 1500; // Thời gian miễn nhiễm (1000ms = 1 giây)
+    Uint32 invincibleDuration = 900; // Thời gian miễn nhiễm (1000ms = 1 giây)
+
+    //stats
+    int hp=100;
+    int energy=100;
+    int strength=100;
+    int damage=10;
 
     // Spritesheet texture
     SDL_Texture* texture;
@@ -81,15 +85,7 @@ int time1=0;
         y += (int)(vy);
 
         
-
-        //zone
-        if(x<LEFTZONE)
-        {x=LEFTZONE;
-        vx=0;}
-        if(x>RIGHTZONE)
-        {x=RIGHTZONE;
-        vx=0;}
-        // frame
+        //frame
         frameTimer ++;
         // Handle ground collision
         if (y + height > GROUND_HEIGHT) {
@@ -116,11 +112,10 @@ int time1=0;
         if((!isInvincible)&&(currentState==PlayerState::IDLE||currentState==PlayerState::RUNNING||currentState==PlayerState::JUMPING))
         {   if (isAttacked)
             {   
-                time1++;
+                hp-=damage;
                 setState(PlayerState::HURT);
             }
         }
-        //cerr<<"Update isAttacked: "<<isAttacked<<endl;
 
         
         // Handle dash
@@ -203,14 +198,12 @@ int time1=0;
             switch (event.key.keysym.sym) {
                 case SDLK_LEFT:
                     facingLeft=true;
-                    if(x>=LEFTZONE)
                     vx = -SPEED;
                     if(!isJumping)
                     setState(PlayerState::RUNNING);
                     break;
                 case SDLK_RIGHT:
                     facingLeft=false;
-                    if(x<=RIGHTZONE)
                     vx = SPEED;
                     if(!isJumping)
                     setState(PlayerState::RUNNING);
@@ -223,11 +216,11 @@ int time1=0;
                     }
                     break;
                 case SDLK_x:
-                    if(currentState!=PlayerState::RUNNING)
+                    if(currentState!=PlayerState::RUNNING&& currentState != PlayerState::DASHING)
                     setState(PlayerState::PUNCHING);
                     break;
                 case SDLK_c:
-                    if(currentState!=PlayerState::RUNNING)
+                    if(currentState!=PlayerState::RUNNING&& currentState != PlayerState::DASHING)
                     setState(PlayerState::KICKING);
                     break;
                 case SDLK_z:
@@ -235,9 +228,6 @@ int time1=0;
                     {setState(PlayerState::DASHING);
                     vx=facingLeft?-3*SPEED:3*SPEED;
                     dashStartTime=SDL_GetTicks();}
-                    break;
-                case SDLK_v:
-                    setState(PlayerState::HURT);
                     break;
                 case SDLK_b:
                     setState(PlayerState::DEAD);
@@ -260,14 +250,15 @@ int time1=0;
                     if(!isJumping)
                     setState(PlayerState::IDLE);}
                     break;
-                case SDLK_v:
                 case SDLK_x:
                 case SDLK_c:{
+                    if (currentState != PlayerState::DASHING &&
+                        (currentState == PlayerState::PUNCHING || currentState == PlayerState::KICKING)) {
                     if(!SDL_GetKeyboardState(NULL)[SDL_SCANCODE_RIGHT]&&!SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LEFT]){
                     if(isJumping)
                     setState(PlayerState::JUMPING);
                     else
-                    setState(PlayerState::IDLE);}
+                    setState(PlayerState::IDLE);}}
                     break;}                    
                 default:
                     break;
@@ -288,9 +279,8 @@ int time1=0;
         }
     }
     bool nextStage(){
-        bool atRightZone=(x>=RIGHTZONE-width);
         bool clearStage=false;
-        return atRightZone&clearStage;
+        return clearStage;
     }
 };
 

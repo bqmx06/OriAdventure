@@ -14,6 +14,75 @@
 #include <vector>
 using namespace std;
 
+int Stage=0;
+
+int MonsterCount=0;
+
+bool ClearStage(){
+    return MonsterCount==0;
+}
+
+void SpawnMonsters(SDL_Renderer* renderer, vector<Monster*>& monsters) {
+    monsters.clear();
+    MonsterCount = Stage * 2;
+    cerr << "Spawn MonsterCount = " << MonsterCount << endl;
+
+    for (int i = 0; i < MonsterCount; ++i) {
+        Monster* m = new Monster(renderer);
+        m->texture = IMG_LoadTexture(renderer, MONSTER_SPRITE_PATH);
+        m->x = rand() % (SCREEN_WIDTH - 100) + 50; // vị trí random trên màn
+        monsters.push_back(m);
+    }
+}
+void ReRender(SDL_Renderer* renderer, Player& player, Background& background,vector<Monster*>& monsters) {
+    // 1. Fade to black
+    Stage++;
+    //MonsterCount=Stage*2;
+    Uint32 startTime = SDL_GetTicks();
+    Uint32 duration = 1000; // 1 giây
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+    while (SDL_GetTicks() - startTime < duration) {
+        float progress = (float)(SDL_GetTicks() - startTime) / duration;
+        int alpha = (int)(progress * 255);
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
+        SDL_RenderFillRect(renderer, NULL);
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16); // ~60fps
+    }
+
+    // 2. Reset lại vị trí player
+    player.x = SCREEN_WIDTH / 2;
+    player.y = GROUND_HEIGHT - player.height;
+    player.vx = 0;
+    player.vy = 0;
+    player.isJumping = false;
+    player.isAttacked = false;
+    player.facingLeft= false;
+    player.setState(PlayerState::IDLE);
+
+    // 3. Reset background nếu có scroll offset hoặc trạng thái
+    background.reset(renderer); // Giả sử bạn có hàm reset() cho background
+    //3.1 monster
+    SpawnMonsters(renderer, monsters);
+    // 4. Fade from black
+    startTime = SDL_GetTicks();
+    while (SDL_GetTicks() - startTime < duration) {
+        float progress = (float)(SDL_GetTicks() - startTime) / duration;
+        int alpha = 255 - (int)(progress * 255);
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
+        SDL_RenderFillRect(renderer, NULL);
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16);
+    }
+
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+}
+
+
+
 inline GameState RunGame(SDL_Renderer* renderer) {
     srand(time(NULL));
     bool quit = false;
@@ -24,13 +93,13 @@ inline GameState RunGame(SDL_Renderer* renderer) {
     
     Background background(renderer);
     background.texture=IMG_LoadTexture(renderer, BG_IMAGE_PATH);
-    background.generatePlatforms(renderer); // Sinh nền tảng ngẫu nhiên cho màn đầu tiên
+    background.generatePlatforms(renderer);
     const char* selectedTexture=gameColor==Color::Pink?PLAYER_SPRITE_PATH:PLAYER_SPRITE_PATH_BLUE;
     Player player(renderer);
     player.texture = IMG_LoadTexture(renderer, selectedTexture);
     
-    Monster monster(renderer);
-    monster.texture = IMG_LoadTexture(renderer, MONSTER_SPRITE_PATH);
+    vector<Monster*> monsters;
+    SpawnMonsters(renderer, monsters);
 
 
     SDL_Texture* asteroidTexture=IMG_LoadTexture(renderer, ASTEROID_PATH);
@@ -49,7 +118,7 @@ inline GameState RunGame(SDL_Renderer* renderer) {
     while (!quit) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) quit = true;
-            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE) quit = true;
+            if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE &&player.x<SCREEN_WIDTH) {Stage=0; MonsterCount=0; quit = true;}
             player.handleEvent(event);
         }
         
@@ -68,9 +137,19 @@ inline GameState RunGame(SDL_Renderer* renderer) {
         }
         player.update();
         
-        monster.update();
-        monster.handle(player);
-        
+        for (auto it = monsters.begin(); it != monsters.end(); ) {
+            Monster* m = *it;
+            m->update();
+            m->handle(player);
+
+            if (m->isDestroyed) {
+                delete m;
+                it = monsters.erase(it);
+                MonsterCount--;
+            } else {
+                ++it;
+            }
+        }
         for (auto& asteroid : asteroids) {
             asteroid.handle(player);
         }
@@ -81,7 +160,9 @@ inline GameState RunGame(SDL_Renderer* renderer) {
         background.render(renderer);        // Vẽ nền
         background.renderPlatforms(renderer); // Vẽ các nền tảng
         player.render(renderer); 
-        monster.render(renderer);
+        for (auto& m : monsters) {
+            m->render(renderer);
+        }
         for (auto& asteroid1 : asteroids) {
             asteroid1.render(renderer);
             //cerr<<asteroid.x<<" "<<asteroid.y<<endl;
@@ -89,7 +170,8 @@ inline GameState RunGame(SDL_Renderer* renderer) {
 
         SDL_RenderPresent(renderer); 
         SDL_Delay(10); 
-        //cerr<<player.isAttacked<<endl;
+        if(ClearStage()&&player.x>SCREEN_WIDTH)
+        ReRender(renderer,player,background,monsters);
     }
     TTF_CloseFont(font);
     SDL_DestroyTexture(asteroidTexture);

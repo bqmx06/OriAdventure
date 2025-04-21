@@ -73,7 +73,7 @@ public:
             if (isCollision) {
                 if (currentFrame == 3) {
                     player.isAttacked = true;
-                    player.setState(PlayerState::HURT);
+                    player.damage=5;
                 }
             } else {
                 //cerr << "NO COLLISION" << endl;

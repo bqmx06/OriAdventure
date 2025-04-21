@@ -13,25 +13,26 @@ class Monster {
 public:
     //rect
     int width = 240, height = 160;
-    int x, y;
-    SDL_Rect rect;
-    
+    int x, y;    
 
     // Movement velocity
     float vx;
     bool facingLeft = false;
+    bool isDestroyed=false;
 
     Uint32 attackCooldown = 1000; // Cooldown giữa các lần tấn công
     Uint32 lastAttackTime = 0;    // Thời gian lần tấn công cuối
-
+    //stats
+    int hp=200;
     // Spritesheet texture
     SDL_Texture* texture;
 
     // Animation-related members
-    AnimationData animations[3] = {
+    AnimationData animations[4] = {
 		{12,0,5},
 		{13,1,5},
-		{5,2,5}
+		{5,2,5},
+        {14,3,30}
 		
 };
     int currentFrame;
@@ -48,7 +49,6 @@ public:
           frameTimer(0),
           currentState(MonsterState::WALKING)          
     {
-        rect={x,y,width,height};
     }
 
     // Destructor
@@ -60,23 +60,32 @@ public:
 
     // Update monster's position and animation
     void update() {
-        if (currentState != MonsterState::ATTACKING) {
+        if (currentState != MonsterState::ATTACKING&&currentState!=MonsterState::DEAD) {
             x += (int)(vx);
         }      
         // Animation frames
         frameTimer++;
+        if (currentState == MonsterState::DEAD)
+        {
+            if(currentFrame != animations[(int)(currentState)].frameCount - 1)
+            currentFrame++;
+            else
+            {isDestroyed=true;
+            return;}
+        }
+        else
+        {
         if (frameTimer >= animations[(int)(currentState)].frameSpeed) {
             frameTimer = 0;
             currentFrame = (currentFrame + 1) % animations[(int)(currentState)].frameCount;
-        }
+        }}
         if (currentState == MonsterState::ATTACKING &&
             currentFrame == animations[(int)(currentState)].frameCount - 1) {
             setState(MonsterState::WALKING);
         }
-        rect = {x, y, width, height};
     }
 
-    void render(SDL_Renderer* renderer) {
+    void render(SDL_Renderer* renderer)  {
         if (!texture) return;
         const AnimationData& anim = animations[(int)(currentState)];
         SDL_Rect clip = {
@@ -99,24 +108,35 @@ public:
     }
  
 	void handle(Player& player) {
+        if(hp<=0)
+        {
+            hp=0;
+            setState(MonsterState::DEAD);
+        }
         int playerCenter = player.x + player.width / 2;
         int monsterCenter = x + width / 2;
         int distance = abs(monsterCenter - playerCenter);
         int attackRange=player.width;
 
         if (distance > attackRange) {
-     
+            //if(player.currentState==PlayerState::DASHING)
+            //x+=10*((player.facingLeft)*2-1);
+            x+=abs(player.vx)*((player.facingLeft)*2-1)/3;
             vx = (playerCenter > monsterCenter) ? abs(MONSTER_SPEED) : -abs(MONSTER_SPEED);
     
             facingLeft = vx < 0;
         } else {
             
             vx = 0;
-            attack(player);
-           
-}
+            if(currentState!=MonsterState::DEAD){
+            if(player.currentState==PlayerState::PUNCHING||player.currentState==PlayerState::KICKING)
+            hurt();
+            else
+            attack(player);}
+        }
   
     }
+    
     // Attack logic (ví dụ quái vật tấn công trong khoảng thời gian nhất định)
     void attack(Player& player) {
         Uint32 currentTime = SDL_GetTicks();
@@ -124,10 +144,20 @@ public:
             lastAttackTime = currentTime;
             setState(MonsterState::ATTACKING);    
         }
-        if(currentState==MonsterState::ATTACKING&&currentFrame==8)
-        player.isAttacked=true;
+        if(currentState==MonsterState::ATTACKING&&currentFrame==8){
+        SDL_Rect playerRect = { player.x, player.y, player.width, player.height };
+        SDL_Rect monsterRect = { x, y, width, height };
+
+        if (SDL_HasIntersection(&playerRect, &monsterRect)) {
+            player.isAttacked = true;
+            player.damage = 20;
+        }
+        }
     }
-    
+    void hurt(){
+        setState(MonsterState::HURT);
+        hp-=1;
+    }
 };
 
 #endif // MONSTER_H
