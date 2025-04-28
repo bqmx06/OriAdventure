@@ -1,6 +1,7 @@
 #ifndef DEFS_H
 #define DEFS_H
 #include"gamestate.h"
+#include <string>
 #define WINDOW_TITLE "Ori Adventure"
 #define SCREEN_WIDTH 1200
 #define SCREEN_HEIGHT 800
@@ -17,17 +18,23 @@
 #define ASTEROID_PATH "assets/asteroid/asteroid.png"
 
 
-#define PLAYER_SPRITE_PATH "assets/player/OriSprite.png"
+#define PLAYER_SPRITE_PATH "assets/player/PinkOriSprite.png"
 #define PLAYER_SPRITE_PATH_BLUE "assets/player/BlueOriSprite1.png"
 #define MONSTER_SPRITE_PATH "assets/monster/DemonKingSprite.png"
 #define GROUND_HEIGHT SCREEN_HEIGHT-85
-#define SPEED 3
+#define SPEED 5
 #define MONSTER_SPEED 2
 #define JUMPFORCE -15
 
+#define AVATAR "assets/player/avatar.png"
+#define FRAME "assets/player/avatarframe.png"
 
 extern Difficulty currentDifficulty;
 extern Color gameColor;
-int volume=50;
+extern int volume;
+extern int highscore;
+void readConfig(const std::string& path);
+void saveConfig(const std::string& path);
+
 
 #endif // DEFS_H

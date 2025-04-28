@@ -86,7 +86,7 @@ GameState ShowOptions(SDL_Renderer* renderer) {
             }
 
             if (backBtn.handleEvent(event)) { TTF_CloseFont(font); return GameState::MENU; }
-            if (saveBtn.handleEvent(event)) { /* Lưu cài đặt */ }
+            if (saveBtn.handleEvent(event)) { saveConfig("data.txt"); }
 
             if (showDifficultyOptions) {
                 if (easyBtn.handleEvent(event)) { SDL_Log("Easy selected"); currentDifficulty=Difficulty::Easy;  }

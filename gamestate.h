@@ -6,8 +6,7 @@ enum class GameState {
     GAMEPLAY,
     HELP,
     OPTIONS,
-    QUIT,
-    GAMEOVER
+    QUIT
 };
 enum class Difficulty {
     Easy,
@@ -26,7 +25,9 @@ enum class PlayerState {
     KICKING,
     DASHING,
     HURT,
-    DEAD
+    DEAD,
+    CHARGING,
+    ULTIMATE
 };
 class PlayerStateManager {
     public:

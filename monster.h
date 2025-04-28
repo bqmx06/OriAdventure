@@ -32,7 +32,7 @@ public:
 		{12,0,5},
 		{13,1,5},
 		{5,2,5},
-        {14,3,30}
+        {14,3,15}
 		
 };
     int currentFrame;
@@ -60,6 +60,11 @@ public:
 
     // Update monster's position and animation
     void update() {
+        if (hp <= 0 && currentState != MonsterState::DEAD) {
+            hp = 0;
+            setState(MonsterState::DEAD);
+        }
+        
         if (currentState != MonsterState::ATTACKING&&currentState!=MonsterState::DEAD) {
             x += (int)(vx);
         }      
@@ -70,8 +75,8 @@ public:
             if(currentFrame != animations[(int)(currentState)].frameCount - 1)
             currentFrame++;
             else
-            {isDestroyed=true;
-            return;}
+            isDestroyed=true;
+            return;
         }
         else
         {
@@ -108,17 +113,15 @@ public:
     }
  
 	void handle(Player& player) {
-        if(hp<=0)
-        {
-            hp=0;
-            setState(MonsterState::DEAD);
-        }
+        if (currentState == MonsterState::DEAD) return;
+
         int playerCenter = player.x + player.width / 2;
         int monsterCenter = x + width / 2;
         int distance = abs(monsterCenter - playerCenter);
         int attackRange=player.width;
 
         if (distance > attackRange) {
+            setState(MonsterState::WALKING);
             //if(player.currentState==PlayerState::DASHING)
             //x+=10*((player.facingLeft)*2-1);
             x+=abs(player.vx)*((player.facingLeft)*2-1)/3;
@@ -126,10 +129,9 @@ public:
     
             facingLeft = vx < 0;
         } else {
-            
             vx = 0;
             if(currentState!=MonsterState::DEAD){
-            if(player.currentState==PlayerState::PUNCHING||player.currentState==PlayerState::KICKING)
+            if((player.currentState==PlayerState::PUNCHING||player.currentState==PlayerState::KICKING)&&(player.facingLeft!=facingLeft))
             hurt();
             else
             attack(player);}

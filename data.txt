@@ -1,0 +1,4 @@
+difficulty=1
+color=1
+volume=31
+highscore=10

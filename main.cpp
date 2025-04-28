@@ -14,12 +14,15 @@
 #include<string>
 #include<vector>
 
+Difficulty currentDifficulty;
+Color gameColor;
+int volume;
+int highscore;
+
 using namespace std;
-
-Difficulty currentDifficulty = Difficulty::Easy;
-Color gameColor=Color::Pink;
-
 int main(int argc, char* argv[]) {
+    readConfig("data.txt");
+
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         std::cerr << "SDL_Init Failed: " << SDL_GetError() << std::endl;
         return -1;
