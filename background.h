@@ -48,7 +48,10 @@ class Background {
 	//texture
 	SDL_Texture* texture;
 	vector<Platform> platforms;
-	Background(SDL_Renderer* renderer):x(-(BG_WIDTH-SCREEN_WIDTH)/2),y(0),width(BG_WIDTH),height(SCREEN_HEIGHT){}
+	SDL_Texture* platformTexture1 = nullptr;
+	SDL_Texture* platformTexture2 = nullptr;
+	Background(SDL_Renderer* renderer):x(-(BG_WIDTH-SCREEN_WIDTH)/2),y(0),width(BG_WIDTH),height(SCREEN_HEIGHT){
+	}
 	~Background() {
         if (texture) {
             SDL_DestroyTexture(texture);
@@ -87,7 +90,7 @@ class Background {
 			int platformHeight = 20; // Chiều cao cố định
 			int platformX = -1800 + rand() % 3600; // X trong khoảng -600 đến 1800
 			int platformY = 200 + rand() % (SCREEN_HEIGHT - 400); // Y từ 200 đến SCREEN_HEIGHT - 200
-
+			
 			SDL_Texture* platformTexture = IMG_LoadTexture(renderer, "platform.png"); // Tải texture platform
 			if (platformTexture) {
 				platforms.emplace_back(platformX, platformY, platformWidth, platformHeight, platformTexture);

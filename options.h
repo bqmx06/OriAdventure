@@ -59,7 +59,7 @@ GameState ShowOptions(SDL_Renderer* renderer) {
     saveBtn.init(renderer, font, "Save", SCREEN_WIDTH / 2 + 60, backY, buttonWidth, buttonHeight);
 
     bool dragging = false;
-    SDL_Texture* bgTexture = IMG_LoadTexture(renderer, MENU_BACKGROUND);
+    SDL_Texture* bgTexture = IMG_LoadTexture(renderer, HELP_BACKGROUND);
     if (!bgTexture) {
         SDL_Log("Failed to load menu background: %s", IMG_GetError());
         TTF_CloseFont(font);

@@ -8,7 +8,7 @@ struct Fireball {
     int width = 249, height = 216;     // Kích thước 1 frame
     int currentFrame = 0;            // Frame hiện tại
     int frameTimer = 0;              // Đếm thời gian đổi frame
-
+    bool isCharged=false;
     AnimationData animations[2] = {
         {9, 0, 20}, // 9 frame, nằm ở row 0, 5 ticks đổi 1 frame
         {5,1,20}
@@ -29,31 +29,51 @@ struct Fireball {
         }
     }
     // Update animation
-    void update() {
-        frameTimer++;
-        AnimationData& anim = animations[0];
-        if (frameTimer >= anim.frameSpeed) {
-            frameTimer = 0;
-            if (currentFrame < anim.frameCount - 1) {
-                currentFrame++; // Cứ charge dần cho tới frame cuối
+        void update() {
+            frameTimer++;
+            if(!isCharged)
+            {AnimationData& anim = animations[0];
+
+            if (frameTimer >= anim.frameSpeed) {
+                frameTimer = 0;
+                if (currentFrame < anim.frameCount - 1) {
+                    currentFrame++; // Cứ charge dần cho tới frame cuối
+                }
+                else 
+                {isCharged=true;
+                currentFrame=0;}
+                
+            }}
+            else
+            {
+                AnimationData& anim = animations[1]; // Ready
+                if (frameTimer >= anim.frameSpeed) {
+                    frameTimer = 0;
+                    currentFrame = (currentFrame + 1) % anim.frameCount;
+                }
             }
-            else 
-            {anim=animations[1];
-            currentFrame=0;}
-            // Nếu muốn loop idle sau charge, thêm logic ở đây.
         }
-    }
 
     // Render fireball
     void render(SDL_Renderer* renderer, int offsetX = 0, int offsetY = 0) {
         if (!texture) return;
 
         const AnimationData& anim = animations[0];
-        SDL_Rect clip = {
+        const AnimationData& anim1= animations[1];
+        SDL_Rect clip;
+        if(!isCharged)
+        clip = {
             currentFrame * width,
             anim.row * height,
             width, height
         };
+        else 
+        clip = {
+            currentFrame * width,
+            anim1.row * height,
+            width, height
+        };
+
         SDL_Rect destRect = { (int)x + offsetX, (int)y + offsetY, width, height };
 
         SDL_RenderCopyEx(renderer, texture, &clip, &destRect, 0, NULL, flipType);

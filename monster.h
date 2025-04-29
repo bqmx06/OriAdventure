@@ -11,6 +11,9 @@ using namespace std;
 
 class Monster {
 public:
+    virtual int getSpeed() const {
+        return 3;
+    }
     //rect
     int width = 240, height = 160;
     int x, y;    
@@ -43,7 +46,7 @@ public:
     Monster(SDL_Renderer* renderer)
         : x(SCREEN_WIDTH),
           y(GROUND_HEIGHT-height),
-          vx(MONSTER_SPEED),
+          vx(getSpeed()),
           texture(nullptr),
           currentFrame(0),
           frameTimer(0),
@@ -52,7 +55,7 @@ public:
     }
 
     // Destructor
-    ~Monster() {
+    virtual ~Monster() {
         if (texture) {
             SDL_DestroyTexture(texture);
         }
@@ -122,25 +125,23 @@ public:
 
         if (distance > attackRange) {
             setState(MonsterState::WALKING);
-            //if(player.currentState==PlayerState::DASHING)
-            //x+=10*((player.facingLeft)*2-1);
             x+=abs(player.vx)*((player.facingLeft)*2-1)/3;
-            vx = (playerCenter > monsterCenter) ? abs(MONSTER_SPEED) : -abs(MONSTER_SPEED);
+            vx = (playerCenter > monsterCenter) ? abs(getSpeed()) : -abs(getSpeed());
     
             facingLeft = vx < 0;
         } else {
             vx = 0;
             if(currentState!=MonsterState::DEAD){
             if((player.currentState==PlayerState::PUNCHING||player.currentState==PlayerState::KICKING)&&(player.facingLeft!=facingLeft))
-            hurt();
+            hurt(player);
             else
             attack(player);}
         }
   
     }
     
-    // Attack logic (ví dụ quái vật tấn công trong khoảng thời gian nhất định)
-    void attack(Player& player) {
+   
+    virtual void attack(Player& player) {
         Uint32 currentTime = SDL_GetTicks();
         if (currentTime - lastAttackTime > attackCooldown) {
             lastAttackTime = currentTime;
@@ -152,14 +153,73 @@ public:
 
         if (SDL_HasIntersection(&playerRect, &monsterRect)) {
             player.isAttacked = true;
-            player.damage = 20;
+            player.damageReceive = 20;
         }
         }
     }
-    void hurt(){
+    void hurt(const Player& player){
         setState(MonsterState::HURT);
-        hp-=1;
+        if(player.comboIndex==2)
+        hp-=2;
+        else hp-=1;
     }
 };
-
+class EliteMonster1 : public Monster {
+    public:
+        EliteMonster1(SDL_Renderer* renderer) : Monster(renderer) {
+            texture = IMG_LoadTexture(renderer, "elite1.png"); 
+            hp=150;
+            attackCooldown=5000;
+        }
+        int getSpeed() const override {
+            return 1;  
+        }
+        void attack(Player& player) override {
+            Uint32 currentTime = SDL_GetTicks();
+            if (currentTime - lastAttackTime > attackCooldown) {
+                lastAttackTime = currentTime;
+                setState(MonsterState::ATTACKING);    
+            }
+            if(currentState == MonsterState::ATTACKING && currentFrame == 8) { 
+                SDL_Rect playerRect = { player.x, player.y, player.width, player.height };
+                SDL_Rect monsterRect = { x, y, width, height };
+    
+                if (SDL_HasIntersection(&playerRect, &monsterRect)) {
+                    player.isAttacked = true;
+                    player.freeze=true;
+                    player.freezeStartTime=SDL_GetTicks();
+                    player.damageReceive = 15;
+                }
+            }
+        }
+    };
+class EliteMonster2 : public Monster {
+    public:
+        EliteMonster2(SDL_Renderer* renderer) : Monster(renderer) {
+            texture = IMG_LoadTexture(renderer, "elite2.png"); 
+            hp=200;
+            attackCooldown=3000;
+        }
+        int getSpeed() const override {
+            return 2;  
+        }
+        void attack(Player& player) override {
+            Uint32 currentTime = SDL_GetTicks();
+            if (currentTime - lastAttackTime > attackCooldown) {
+                lastAttackTime = currentTime;
+                setState(MonsterState::ATTACKING);    
+            }
+            if(currentState == MonsterState::ATTACKING && currentFrame == 8) { 
+                SDL_Rect playerRect = { player.x, player.y, player.width, player.height };
+                SDL_Rect monsterRect = { x, y, width, height };
+    
+                if (SDL_HasIntersection(&playerRect, &monsterRect)) {
+                    player.isAttacked = true;
+                    player.flame=true;
+                    player.flameStartTime = SDL_GetTicks();
+                    player.damageReceive = 25;
+                }
+            }
+        }
+    };
 #endif // MONSTER_H

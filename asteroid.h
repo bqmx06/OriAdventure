@@ -12,7 +12,6 @@ public:
     float vy,vx;
     int width = 96, height = 96;
     bool active;
-    int damage;
     AnimationData animations[1] = {
         {7, 0, 15}
     };
@@ -22,7 +21,7 @@ public:
     SDL_Texture* texture;
     // Constructor với khởi tạo đầy đủ
     Asteroid(SDL_Renderer* renderer) 
-        : x(SCREEN_WIDTH), y(-96.0f), vy(ASTEROID_GRAVITY), active(true), damage(10), 
+        : x(SCREEN_WIDTH), y(-96.0f), vy(ASTEROID_GRAVITY), active(true), 
           currentFrame(0), frameTimer(0) {
             vx = - (2.0f + static_cast<float>(rand()) / RAND_MAX * 6.0f);
           }
@@ -73,29 +72,14 @@ public:
             if (isCollision) {
                 if (currentFrame == 3) {
                     player.isAttacked = true;
-                    player.damage=5;
+                    player.damageReceive=10;
                 }
             } else {
                 //cerr << "NO COLLISION" << endl;
             }
     }
     
-        //void render(SDL_Renderer* renderer, int offsetX = 0, int offsetY = 0) {
-        //    if (!active || !texture) return;
-
-        //    const AnimationData& anim = animations[0];
-        //    SDL_Rect clip = {
-        //        currentFrame * width,
-        //        anim.row * height,
-        //        width, height
-        //    };
-        //    SDL_Rect destRect = { (int)x + offsetX, (int)y + offsetY, width, height };
-        //    SDL_RendererFlip flipType = facingLeft ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
-        //    SDL_RenderCopyEx(renderer, texture, &clip, &destRect, 0, NULL, flipType);
-        //    SDL_Rect redBox = { (int)x + offsetX, (int)y + offsetY, width, height };
-        //    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Màu đỏ
-        //    SDL_RenderDrawRect(renderer, &redBox);
-        //}
+        
 
         void render(SDL_Renderer* renderer) {
             if (!active || !texture) return;

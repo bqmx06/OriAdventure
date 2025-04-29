@@ -24,23 +24,42 @@ public:
     bool isJumping=false;
     bool isAttacked=false;
     bool fakeDead=false;
+        // freeze effect
+    bool freeze = false;
+    Uint32 freezeStartTime = 0;
+    Uint32 freezeDuration = 2000; 
+
+    // flame effect
+    bool flame = false;
+    Uint32 flameStartTime = 0;
+    Uint32 flameDuration = 4000; 
+    Uint32 lastBurnTime = 0;  
+    Uint32 burnInterval = 500; 
+    int burnDamage = 5;
     //dash
     Uint32 dashDuration=200;
     Uint32 dashStartTime=0;
     //hurt
-    bool isInvincible = false; // Kiểm tra nhân vật có miễn nhiễm hay không
-    Uint32 invincibleStartTime = 0; // Thời điểm bắt đầu miễn nhiễm
-    Uint32 invincibleDuration = 900; // Thời gian miễn nhiễm (1000ms = 1 giây)
+    bool isInvincible = false; 
+    Uint32 invincibleStartTime = 0; 
+    Uint32 invincibleDuration = 900; 
 
     //stats
     int hp=100;
     int energy=100;
     int strength=100;
-    int damage=10;
+    int damage=2;
+    int damageReceive=10;
     //attack
-    int comboIndex = 0;               // 0 -> Đấm 1, 1 -> Đấm 2, 2 -> Đá
-    Uint32 lastAttackTime = 0;        // Lưu thời gian tấn công cuối
-    Uint32 comboResetDelay = 1500;     // Reset combo nếu quá 800ms không đánh
+    int comboIndex = 0;              
+    Uint32 lastAttackTime = 0;       
+    Uint32 comboResetDelay = 1500;     
+    // Regeneration
+    Uint32 lastRegenTime = 0;          
+    Uint32 regenInterval = 1000;       
+    int regenHP;                    
+    int regenStrength;             
+    int regenEnergy;              
     // Spritesheet texture
     SDL_Texture* texture;
     SDL_Texture* avatarTexture = nullptr;
@@ -93,8 +112,50 @@ public:
         if (laserTexture) SDL_DestroyTexture(laserTexture);
 
     }
-    // Update player's position and animation
+
+    
+    void updateHealth(){
+        if((!isInvincible)&&(currentState==PlayerState::IDLE||currentState==PlayerState::RUNNING||currentState==PlayerState::JUMPING))
+        {   if (isAttacked)
+            {   
+                hp-=damageReceive;
+                setState(PlayerState::HURT);
+            }
+        } 
+    }
     void update() {
+        if(fakeDead)
+        {regenHP=-10;}
+        else if(hp>9&&currentState!=PlayerState::CHARGING)
+        {if(currentDifficulty==Difficulty::Easy||currentDifficulty==Difficulty::Medium) regenHP=1;
+        else regenHP=0;}
+        
+        Uint32 now = SDL_GetTicks();
+        //effect
+        if (freeze) {
+            if (now - freezeStartTime > freezeDuration) {
+                freeze = false;
+            } else {
+                vx = 0; 
+            }
+        }
+        
+        // flame effect
+        if (flame) {
+            if (now - flameStartTime > flameDuration) {
+                flame = false;
+            } else if (now - lastBurnTime > burnInterval) {
+                hp -= burnDamage;
+                lastBurnTime = now;
+            }
+        }
+        // Regeneration
+        if (now - lastRegenTime >= regenInterval) {
+            lastRegenTime = now;
+            hp = min(hp + regenHP, 100);
+            strength = min(strength + regenStrength, 100);
+            energy = min(energy + regenEnergy, 100);
+        }
         //fireball
         fireball.x = x + width / 2 - fireball.width / 2;
         fireball.y = y - 300;
@@ -114,6 +175,7 @@ public:
           );
         if (currentState == PlayerState::ULTIMATE && lasers.empty()) {
             setState(PlayerState::IDLE);
+            fireball.isCharged=false;
         }
         const float gravity = 0.5f;
         // Apply gravity
@@ -141,21 +203,18 @@ public:
         if (isInvincible) {
             Uint32 currentTime = SDL_GetTicks();
             if (currentTime - invincibleStartTime > invincibleDuration) {
-                isInvincible = false; // Hết thời gian miễn nhiễm
+                isInvincible = false;
             }
         }
         // attacked
     
-        if((!isInvincible)&&(currentState==PlayerState::IDLE||currentState==PlayerState::RUNNING||currentState==PlayerState::JUMPING))
-        {   if (isAttacked)
-            {   
-                hp-=damage;
-                setState(PlayerState::HURT);
-            }
-        } 
+        updateHealth();
 
         if(hp<=0)
         {hp=0;
+        vx=0;
+        regenHP=0;
+        fakeDead=false;
         setState(PlayerState::DEAD);}
         if(strength<=0)
         strength=0;
@@ -205,8 +264,7 @@ public:
                 if (currentFrame < animations[(int)(currentState)].frameCount - 1) {
                     currentFrame++;
                 } else {
-                    //cerr << "Resetting isAttacked at: " << SDL_GetTicks() << endl;
-                    isAttacked = false; // Reset trạng thái bị tấn công
+                    isAttacked = false; 
                     const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
                     if (currentKeyStates[SDL_SCANCODE_RIGHT] || currentKeyStates[SDL_SCANCODE_LEFT]) {
                         setState(PlayerState::RUNNING);
@@ -222,11 +280,7 @@ public:
             else if (currentState == PlayerState::PUNCHING || currentState == PlayerState::KICKING) {
                 if (currentFrame < animations[(int)(currentState)].frameCount - 1) {
                     currentFrame++;
-                } else {
-                    if (currentState == PlayerState::KICKING) {
-                        damage /= 2; // reset damage sau đòn đá
-                    }
-            
+                } else {            
                     comboIndex++;
                     if (comboIndex > 2) comboIndex = 0; // combo kết thúc
             
@@ -244,9 +298,7 @@ public:
 
     void render(SDL_Renderer* renderer) {
         if (!texture) return;
-        const AnimationData& anim = animations[(int)(currentState)];
-        //cerr<< (int)currentState<<endl;
-        
+        const AnimationData& anim = animations[(int)(currentState)];   
         SDL_Rect clip = {
             currentFrame * width, 
             anim.row * height,   
@@ -254,7 +306,7 @@ public:
         };
         SDL_Rect destRect = { x, y, width, height };
         SDL_RendererFlip flipType = facingLeft ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
-        // Render the current frame
+
         SDL_RenderCopyEx(renderer, texture, &clip, &destRect,0,NULL,flipType);
         for (auto& l : lasers) 
             l.render(renderer);
@@ -269,8 +321,8 @@ public:
     
         SDL_Rect avatarRect = { 0, -10, 128, 128 };
     
-        SDL_RenderCopy(renderer, avatarTexture, nullptr, &avatarRect);   // Vẽ avatar
-        SDL_RenderCopy(renderer, frameTexture, nullptr, &avatarRect);    // Vẽ khung viền
+        SDL_RenderCopy(renderer, avatarTexture, nullptr, &avatarRect);   
+        SDL_RenderCopy(renderer, frameTexture, nullptr, &avatarRect);    
     }
         
     
@@ -279,11 +331,11 @@ public:
         int barHeight = 10;
         int offsetY = 15;
     
-        // HUD vị trí cố định
+    
         int baseX = 105;
         int baseY = 30;
     
-        // HP Bar
+
         SDL_Rect hpBorder = { baseX - 1, baseY - 1, barWidth + 2, barHeight + 2 };
         SDL_Rect hpBack = { baseX, baseY, barWidth, barHeight };
         SDL_Rect hpFront = { baseX, baseY, barWidth * hp / 100, barHeight };
@@ -295,7 +347,7 @@ public:
         SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
         SDL_RenderFillRect(renderer, &hpFront);
     
-        // Strength Bar
+ 
         int sy = baseY + offsetY;
         SDL_Rect strengthBorder = { baseX - 1, sy - 1, barWidth + 2, barHeight + 2 };
         SDL_Rect strengthBack = { baseX, sy, barWidth, barHeight };
@@ -308,7 +360,7 @@ public:
         SDL_SetRenderDrawColor(renderer, 255, 165, 0, 255);
         SDL_RenderFillRect(renderer, &strengthFront);
     
-        // Energy Bar
+
         int ey = baseY + 2 * offsetY;
         SDL_Rect energyBorder = { baseX - 1, ey - 1, barWidth + 2, barHeight + 2 };
         SDL_Rect energyBack = { baseX, ey, barWidth, barHeight };
@@ -326,23 +378,29 @@ public:
     
     // Handle user input
     void handleEvent(const SDL_Event& event) {
-        if (currentState==PlayerState::DEAD||currentState==PlayerState::ULTIMATE)
+        if ((currentState==PlayerState::DEAD&&!fakeDead)||currentState==PlayerState::ULTIMATE)
         return;
-        if (event.type == SDL_KEYDOWN && event.key.repeat == 0) {
+        if (event.type == SDL_KEYDOWN && event.key.repeat == 0 &&!freeze) {
             switch (event.key.keysym.sym) {
                 case SDLK_LEFT:
+                    if(fakeDead)
+                    fakeDead=false;
                     facingLeft=true;
                     vx = -SPEED;
                     if(!isJumping)
                     setState(PlayerState::RUNNING);
                     break;
                 case SDLK_RIGHT:
-                    facingLeft=false;
+                    if(fakeDead)
+                    fakeDead=false;
+                    facingLeft=false;   
                     vx = SPEED;
                     if(!isJumping)
                     setState(PlayerState::RUNNING);
                     break;
                 case SDLK_UP:
+                    if(fakeDead)
+                    fakeDead=false;
                     if (!isJumping && currentState != PlayerState::DASHING) { 
                         vy = JUMPFORCE;
                         setState(PlayerState::JUMPING);
@@ -350,14 +408,14 @@ public:
                     }
                     break;
                 case SDLK_x:
+                    if(strength>=10)
                     if (currentState == PlayerState::IDLE || currentState == PlayerState::JUMPING) {
                         Uint32 now = SDL_GetTicks();
                         if (now - lastAttackTime > comboResetDelay) {
-                            comboIndex = 0; // reset combo nếu bấm chậm quá
+                            comboIndex = 0; 
                         }
                 
                         lastAttackTime = now;
-                        cerr<<comboIndex<<endl;
                         if (comboIndex == 0 || comboIndex == 1) {
                             setState(PlayerState::PUNCHING);
                             strength-=10;
@@ -368,20 +426,25 @@ public:
                     }
                     break;
                 case SDLK_c:
+                    if(energy==100){
                     if (currentState == PlayerState::IDLE ) {
                         setState(PlayerState::CHARGING);
-                    }
+                        regenHP=0;
+                        regenEnergy=0;
+                        regenStrength=0;
+                    }}
                     break;
                 case SDLK_z:
-                    /*if(energy>0){*/if(true){
+                    if(energy>=20){
                     if(currentState==PlayerState::IDLE||currentState==PlayerState::RUNNING)
                     {setState(PlayerState::DASHING);
-                    energy-=50;
+                    energy-=20;
                     vx=facingLeft?-3*SPEED:3*SPEED;
                     dashStartTime=SDL_GetTicks();}}
                     break;
                 case SDLK_b:
-                    setState(PlayerState::DEAD);
+                    {setState(PlayerState::DEAD);
+                    fakeDead=true;}
                     break;
                 default:
                     break;
@@ -403,7 +466,11 @@ public:
                     break;
                 case SDLK_c:
                     if (currentState == PlayerState::CHARGING) {
+                        resetRegen();
+                        if(fireball.isCharged)
                         setState(PlayerState::ULTIMATE);
+                        else setState(PlayerState::IDLE);
+                        
 
                     }
                     break;                 
@@ -425,8 +492,24 @@ public:
             }
         }
     }
+    void resetRegen(){
+        if (currentDifficulty == Difficulty::Hard) {
+            regenHP = 0;
+            regenEnergy = 1;
+            regenStrength = 10;
+            regenInterval=6000;
+        } else if (currentDifficulty == Difficulty::Medium) {
+            regenHP = 1;
+            regenEnergy = 1;
+            regenStrength = 5;
+            regenInterval=2000;
+        } else {
+            regenHP = 1;
+            regenEnergy = 3;
+            regenStrength = 10;
+        }
 
-    
+    }
     
 };
 

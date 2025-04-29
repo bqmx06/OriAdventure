@@ -1,4 +1,4 @@
-difficulty=1
-color=1
-volume=31
-highscore=10
+difficulty=2
+color=0
+volume=53
+highscore=26
