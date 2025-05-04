@@ -13,6 +13,7 @@ Nguồn tham khảo code:
  - Sử dụng AI (ChatGPT, Copilot) để hỏi về tác dụng của các hàm trong SDL2 rõ ràng hơn cũng như nhận gợi ý về các hàm nên sử dụng để làm được ý tưởng mong muốn cho game của mình.
  Điểm nổi bật: 
  Hiểu rõ toàn bộ code cũng như có khả năng tìm và sửa lỗi (nếu có) trong quá trình làm game do thực sự đầu tư công sức vào bài tập lớn.
+ Một số thuật toán tìm frame để vẽ hay xử lí va chạm tự học được khá khác so với tài liệu hướng dẫn của cô -> sẽ có sự đa dạng trong xử lí code.
  Game đầu tư ở các phần code, tính năng cũng như đồ họa, mỗi ý tưởng cải tiến game đều được TỰ NGHĨ để phát triển từng bước một cũng như dễ dàng theo đó mà cải tiến thêm trong tương lai.
  Checklist:
 	Đồ họa, âm thanh
