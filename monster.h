@@ -23,8 +23,8 @@ public:
     bool facingLeft = false;
     bool isDestroyed=false;
 
-    Uint32 attackCooldown = 1000; // Cooldown giữa các lần tấn công
-    Uint32 lastAttackTime = 0;    // Thời gian lần tấn công cuối
+    Uint32 attackCooldown = 1000; 
+    Uint32 lastAttackTime = 0;    
     //stats
     int hp=200;
     // Spritesheet texture

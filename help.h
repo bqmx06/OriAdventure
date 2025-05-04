@@ -38,7 +38,7 @@ GameState ShowHelp(SDL_Renderer* renderer) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         
-        SDL_RenderCopy(renderer, bgTexture, nullptr, nullptr); // render ảnh nền full screen
+        SDL_RenderCopy(renderer, bgTexture, nullptr, nullptr); 
 
        
         SDL_Color textColor = {255, 165, 0}; // Cam
@@ -49,9 +49,10 @@ GameState ShowHelp(SDL_Renderer* renderer) {
             "- Right: Move right\n"
             "- Left: Move left\n"
             "- Z: Dash\n"
-            "- X: Punch\n"
-            "- C: Kick\n"
-            "Help Ori to go to new Stages by surviving waves of attack. Be careful, there are either bosses or mobs attacking with anger!",
+            "- X: Punch-and-kick combo\n"
+            "- C: Charge laser ultimate\n"
+            "- B: Fake dead\n"
+            "Help Ori to go to new Stages by surviving waves of attack. Be careful, monsters and elites everywhere!",
             textColor, 600);
         SDL_Texture* helpText = SDL_CreateTextureFromSurface(renderer, textSurface);
         SDL_Rect textRect = {300, 100, textSurface->w, textSurface->h};

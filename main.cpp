@@ -1,6 +1,7 @@
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+#include <SDL_mixer.h>
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
@@ -34,10 +35,36 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return -1;
     }
+    
 
     //SDL_ttf
     if (TTF_Init() != 0) {
         std::cerr << "TTF_Init Failed: " << TTF_GetError() << std::endl;
+        IMG_Quit();
+        SDL_Quit();
+        return -1;
+    }
+    //SDL_mixer
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        std::cerr << "Mix_OpenAudio Failed: " << Mix_GetError() << std::endl;
+        TTF_Quit();
+        IMG_Quit();
+        SDL_Quit();
+        return -1;
+    }
+    Mix_Music* menuMusic = Mix_LoadMUS("assets/music/menu.wav");
+    Mix_Music* gameMusic = Mix_LoadMUS("assets/music/game.mp3");
+    Mix_Music* currentMusic = nullptr;
+
+
+    
+
+
+
+    if (!menuMusic || !gameMusic) {
+        std::cerr << "Failed to load music: " << Mix_GetError() << std::endl;
+        Mix_CloseAudio();
+        TTF_Quit();
         IMG_Quit();
         SDL_Quit();
         return -1;
@@ -71,6 +98,27 @@ int main(int argc, char* argv[]) {
     bool running = true;
 
     while (running) {
+        
+        readConfig("data.txt");
+        volume=volume*128/100;
+        Mix_VolumeMusic(volume);
+        Mix_Music* desiredMusic = nullptr;
+
+        if (currentState == GameState::GAMEPLAY) {
+            desiredMusic = gameMusic;
+        }
+        else if (currentState == GameState::MENU || 
+                 currentState == GameState::HELP || 
+                 currentState == GameState::OPTIONS) {
+            desiredMusic = menuMusic;
+        }
+        if (desiredMusic != currentMusic) {
+            if (Mix_PlayingMusic()) {
+                Mix_HaltMusic();  // dừng bài cũ
+            }
+            Mix_PlayMusic(desiredMusic, -1); // -1 = lặp vô hạn
+            currentMusic = desiredMusic;
+        }
         switch (currentState) {
             case GameState::MENU:
                 currentState = ShowMenu(renderer);
@@ -83,6 +131,8 @@ int main(int argc, char* argv[]) {
                 break;
             case GameState::OPTIONS:
                 currentState = ShowOptions(renderer);
+                readConfig("data.txt");
+                Mix_VolumeMusic(volume);
                 break;
             case GameState::QUIT:
                 running = false;
@@ -95,6 +145,9 @@ int main(int argc, char* argv[]) {
     SDL_DestroyWindow(window);
     TTF_Quit();
     IMG_Quit();
+    Mix_FreeMusic(menuMusic);
+    Mix_FreeMusic(gameMusic);
+    Mix_CloseAudio();
     SDL_Quit();
 
     return 0;

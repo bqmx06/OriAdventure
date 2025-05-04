@@ -16,10 +16,9 @@ struct Platform {
     Platform(int x, int y, int width, int height, SDL_Texture* texture)
         : x(x), y(y), width(width), height(height), texture(texture) {}
 	void handle(Player& player) {
-		// Kiểm tra va chạm với player
 		if (checkCollision(player)) {
-			player.y = y - player.height+15; // Đặt player lên trên platform
-			player.vy = 0; // Dừng rơi
+			player.y = y - player.height+15; 
+			player.vy = 0; 
 			player.isJumping = false;
 			if(player.currentState==PlayerState::JUMPING){
 			const Uint8* currentKeyStates = SDL_GetKeyboardState(NULL);
@@ -34,9 +33,9 @@ struct Platform {
 
 
 	bool checkCollision(const Player& player) {
-		bool verticalCheck = player.vy >= 0 &&  // đang rơi xuống
-			player.y + player.height <= y + 15 && // chạm trong khoảng 20px
-			player.y + player.height >= y - 10;   // không quá xa platform
+		bool verticalCheck = player.vy >= 0 &&  
+			player.y + player.height <= y + 15 && 
+			player.y + player.height >= y - 10;   
 		bool horizontalCheck = (player.x + player.width > x && player.x < x + width);
 		return verticalCheck && horizontalCheck;
 	}
@@ -63,7 +62,7 @@ class Background {
 	void handle(Player& player) {
 		if (player.vx != 0) {
 			int deltaX = player.vx/BG_SPEED;
-			x -= deltaX; // Di chuyển nền
+			x -= deltaX; 
 			if(x>0) x=0;
 			else if(x<-1200) x=-1200;
 			else
@@ -72,7 +71,7 @@ class Background {
 			}
 		}
 		for (auto& platform : platforms) {
-            platform.handle(player); // Gọi hàm handle của từng platform
+            platform.handle(player); 
         }
 	}
 	void render(SDL_Renderer* renderer) {
@@ -84,21 +83,20 @@ class Background {
 	
 	void generatePlatforms(SDL_Renderer* renderer) {
 		platforms.clear(); 
-		int numPlatforms = 10 + rand() % 15; // Số lượng platform ngẫu nhiên (5-10)
+		int numPlatforms = 10 + rand() % 15; 
 		for (int i = 0; i < numPlatforms; i++) {
-			int platformWidth = 100 + rand() % 200; // Rộng từ 100-300
-			int platformHeight = 20; // Chiều cao cố định
-			int platformX = -1800 + rand() % 3600; // X trong khoảng -600 đến 1800
-			int platformY = 200 + rand() % (SCREEN_HEIGHT - 400); // Y từ 200 đến SCREEN_HEIGHT - 200
+			int platformWidth = 100 + rand() % 200; 
+			int platformHeight = 20; 
+			int platformX = -1800 + rand() % 3600; 
+			int platformY = 200 + rand() % (SCREEN_HEIGHT - 400); 
 			
-			SDL_Texture* platformTexture = IMG_LoadTexture(renderer, "platform.png"); // Tải texture platform
+			SDL_Texture* platformTexture = IMG_LoadTexture(renderer, "platform.png");
 			if (platformTexture) {
 				platforms.emplace_back(platformX, platformY, platformWidth, platformHeight, platformTexture);
 			}
 		}
 	}
 
-	// Vẽ các platform
 	void renderPlatforms(SDL_Renderer* renderer) {
 		for (const auto& platform : platforms) {
 			SDL_Rect destRect = { platform.x, platform.y, platform.width, platform.height };
@@ -107,11 +105,11 @@ class Background {
 	}
 
 	void reset(SDL_Renderer* renderer) {
-		// Reset lại vị trí background
+		
 		x = -(BG_WIDTH - SCREEN_WIDTH) / 2;
 		y = 0;
 	
-		// Hủy texture cũ của các platform
+	
 		for (auto& platform : platforms) {
 			if (platform.texture) {
 				SDL_DestroyTexture(platform.texture);
@@ -120,7 +118,7 @@ class Background {
 		}
 		platforms.clear();
 	
-		// Tạo lại platform mới
+		
 		generatePlatforms(renderer);
 	}
 	

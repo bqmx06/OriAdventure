@@ -12,6 +12,9 @@
 using namespace std;
 
 
+
+
+
 class Player {
 public:
     //rect
@@ -81,8 +84,8 @@ public:
         {3, 5, 5},   // DASHING: 3 frames, row 5
         {2, 6, 10},  //HURT
         {8, 7, 10},  //DEAD
-        {3, 8, 10},
-        {7, 9, 15}
+        {3, 8, 10}, //charge
+        {7, 9, 15} //laser
     };
     int currentFrame;
     int frameTimer;
@@ -282,7 +285,7 @@ public:
                     currentFrame++;
                 } else {            
                     comboIndex++;
-                    if (comboIndex > 2) comboIndex = 0; // combo kết thúc
+                    if (comboIndex > 2) comboIndex = 0; 
             
                     if (isJumping)
                         setState(PlayerState::JUMPING);
@@ -417,9 +420,13 @@ public:
                 
                         lastAttackTime = now;
                         if (comboIndex == 0 || comboIndex == 1) {
+
+
                             setState(PlayerState::PUNCHING);
                             strength-=10;
                         } else if (comboIndex == 2) {
+   
+
                             setState(PlayerState::KICKING);
                             strength-=20;
                         }
@@ -428,6 +435,7 @@ public:
                 case SDLK_c:
                     if(energy==100){
                     if (currentState == PlayerState::IDLE ) {
+
                         setState(PlayerState::CHARGING);
                         regenHP=0;
                         regenEnergy=0;
@@ -467,8 +475,10 @@ public:
                 case SDLK_c:
                     if (currentState == PlayerState::CHARGING) {
                         resetRegen();
-                        if(fireball.isCharged)
-                        setState(PlayerState::ULTIMATE);
+                        if(fireball.isCharged){
+      
+
+                        setState(PlayerState::ULTIMATE);}
                         else setState(PlayerState::IDLE);
                         
 

@@ -1,6 +1,7 @@
 #ifndef DEFS_H
 #define DEFS_H
 #include"gamestate.h"
+#include"SDL_mixer.h"
 #include <string>
 #define WINDOW_TITLE "Ori Adventure"
 #define SCREEN_WIDTH 1200
@@ -37,6 +38,8 @@
 #define AVATAR "assets/player/avatar.png"
 #define FRAME "assets/player/avatarframe.png"
 
+extern Mix_Music* menuMusic;
+extern Mix_Music* gameMusic;
 
 
 

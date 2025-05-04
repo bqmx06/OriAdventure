@@ -19,18 +19,14 @@ public:
     int currentFrame;
     int frameTimer;
     SDL_Texture* texture;
-    // Constructor với khởi tạo đầy đủ
+    
     Asteroid(SDL_Renderer* renderer) 
         : x(SCREEN_WIDTH), y(-96.0f), vy(ASTEROID_GRAVITY), active(true), 
           currentFrame(0), frameTimer(0) {
             vx = - (2.0f + static_cast<float>(rand()) / RAND_MAX * 6.0f);
           }
 
-    //~Asteroid() {
-    //    if (texture) {
-    //        SDL_DestroyTexture(texture);
-    //    }
-    //}
+
 
     void update(Player& player) {
         int explosionTriggerY = player.y + player.height - height - player.height * ((int)ASTEROID_GRAVITY) / 2;
@@ -59,8 +55,8 @@ public:
         int aw = width;
         int ah = height;
     
-        int px = player.x; // player.x
-        int py = player.y; // player.y
+        int px = player.x; 
+        int py = player.y; 
         int pw = player.width;
         int ph = player.height;
     
@@ -72,11 +68,9 @@ public:
             if (isCollision) {
                 if (currentFrame == 3) {
                     player.isAttacked = true;
-                    player.damageReceive=10;
+                    player.damageReceive=5;
                 }
-            } else {
-                //cerr << "NO COLLISION" << endl;
-            }
+            } 
     }
     
         
@@ -86,19 +80,16 @@ public:
         
             const AnimationData& anim = animations[0];
             SDL_Rect clip = {
-                currentFrame * width, // Frame trên spritesheet
+                currentFrame * width, 
                 anim.row * height,
                 width, height
             };
-            // Không thêm offset để hiển thị đúng vị trí gốc của thiên thạch
+          
             SDL_Rect destRect = { (int)x, (int)y, width, height }; 
             SDL_RendererFlip flipType = facingLeft ? SDL_FLIP_NONE : SDL_FLIP_HORIZONTAL;
             SDL_RenderCopyEx(renderer, texture, &clip, &destRect, 0, NULL, flipType);
         
-            // Vẽ hitbox chính xác tại vị trí hiện tại
-            //SDL_Rect redBox = { (int)x, (int)y, width, height };
-            //SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255); // Màu đỏ
-            //SDL_RenderDrawRect(renderer, &redBox);
+      
         }
 
     void setInactive() { 

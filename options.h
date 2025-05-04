@@ -183,7 +183,6 @@ GameState ShowOptions(SDL_Renderer* renderer) {
 
         SDL_RenderPresent(renderer);
         SDL_Delay(16);
-        cerr<<volume<<endl;
     }
 
 exit_options:

@@ -19,6 +19,10 @@ int Stage=0;
 
 int MonsterCount=0;
 
+
+
+
+
 bool ClearStage(){
     return MonsterCount==0;
 }
@@ -48,18 +52,18 @@ void SpawnMonsters(SDL_Renderer* renderer, vector<Monster*>& monsters) {
             m = new EliteMonster2(renderer);
             m->texture = IMG_LoadTexture(renderer, ELITEMONSTER2_SPRITE_PATH);
         }
-        m->x = (rand() % 3600)-1800; // vị trí random trên màn
+        m->x = (rand() % 3600)-1800+600; 
         monsters.push_back(m);
     }
 }
 void ReRender(SDL_Renderer* renderer, Player& player, Background& background,vector<Monster*>& monsters, const vector<string>& bgPaths) {
-    // 1. Fade to black
+    //Fade to black
     Stage++;
     if(Stage>highscore)
     highscore=Stage;
     saveConfig("data.txt");
     Uint32 startTime = SDL_GetTicks();
-    Uint32 duration = 1000; // 1 giây
+    Uint32 duration = 1000; 
 
     SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
     while (SDL_GetTicks() - startTime < duration) {
@@ -69,10 +73,10 @@ void ReRender(SDL_Renderer* renderer, Player& player, Background& background,vec
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, alpha);
         SDL_RenderFillRect(renderer, NULL);
         SDL_RenderPresent(renderer);
-        SDL_Delay(16); // ~60fps
+        SDL_Delay(16); 
     }
 
-    // 2. Reset lại vị trí player
+    //Reset lại vị trí player
     player.x = SCREEN_WIDTH / 2;
     player.y = GROUND_HEIGHT - player.height;
     player.vx = 0;
@@ -88,27 +92,24 @@ void ReRender(SDL_Renderer* renderer, Player& player, Background& background,vec
     if(player.hp>=100)
     player.hp=100;
 
-    //
 
     int idx = rand() % int(bgPaths.size());
     const string& path = bgPaths[idx];
 
-    // 2) Xóa background cũ
     if (background.texture) {
         SDL_DestroyTexture(background.texture);
     }
 
-    // 3) Load background mới
+    //Load background mới
     background.texture = IMG_LoadTexture(renderer, path.c_str());
     if (!background.texture) {
         cerr << "Failed to load BG: " << path 
                 << " error: " << IMG_GetError() << "\n";
     }
-    // 3. Reset background nếu có scroll offset hoặc trạng thái
     background.reset(renderer); 
-    //3.1 monster
+    //monster
     SpawnMonsters(renderer, monsters);
-    // 4. Fade from black
+    //Fade from black
     startTime = SDL_GetTicks();
     while (SDL_GetTicks() - startTime < duration) {
         float progress = (float)(SDL_GetTicks() - startTime) / duration;
@@ -249,8 +250,8 @@ inline GameState RunGame(SDL_Renderer* renderer) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); 
         SDL_RenderClear(renderer);                    
         
-        background.render(renderer);        // Vẽ nền
-        background.renderPlatforms(renderer); // Vẽ các nền tảng
+        background.render(renderer);        
+        background.renderPlatforms(renderer); 
         player.render(renderer); 
         
         for (auto& m : monsters) {
@@ -262,7 +263,7 @@ inline GameState RunGame(SDL_Renderer* renderer) {
 
 
 
-                // --- Vẽ Stage ---
+        // --- Vẽ Stage ---
         std::string stageText = "Stage: " + std::to_string(Stage);
         SDL_Color textColor = {255, 255, 255, 255}; // Trắng
         SDL_Surface* stageSurface = TTF_RenderText_Solid(font, stageText.c_str(), textColor);
@@ -289,18 +290,18 @@ inline GameState RunGame(SDL_Renderer* renderer) {
         static Uint32 deathTime = 0;
 
         if (player.currentState == PlayerState::DEAD&&!player.fakeDead) {
+
             if (deathTime == 0) {
-                deathTime = SDL_GetTicks(); // Lưu thời điểm chết
+                deathTime = SDL_GetTicks();
             }
 
-            if (SDL_GetTicks() - deathTime > 3500) { // Chờ 1.5 giây trước khi hiện Game Over
-                // Làm tối màn hình
+            if (SDL_GetTicks() - deathTime > 3500) { 
                 SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
                 SDL_SetRenderDrawColor(renderer, 0, 0, 0, 180);
                 SDL_Rect overlay = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
                 SDL_RenderFillRect(renderer, &overlay);
 
-                // Hiển thị chữ "Game Over"
+
                 SDL_Color red = {255, 0, 0, 255};
                 SDL_Surface* gameOverSurface = TTF_RenderText_Solid(font, "GAME OVER", red);
                 SDL_Texture* gameOverTexture = SDL_CreateTextureFromSurface(renderer, gameOverSurface);
@@ -311,7 +312,7 @@ inline GameState RunGame(SDL_Renderer* renderer) {
                 SDL_FreeSurface(gameOverSurface);
                 SDL_DestroyTexture(gameOverTexture);
 
-                // Hiển thị hướng dẫn
+
                 SDL_Color white = {255, 255, 255, 255};
                 SDL_Surface* infoSurface = TTF_RenderText_Solid(font, "Press R to Retry or ESC to Quit", white);
                 SDL_Texture* infoTexture = SDL_CreateTextureFromSurface(renderer, infoSurface);
@@ -324,7 +325,7 @@ inline GameState RunGame(SDL_Renderer* renderer) {
 
                 SDL_RenderPresent(renderer);
 
-                // Dừng game, chờ người chơi chọn hành động
+
                 bool wait = true;
                 while (wait) {
                     while (SDL_PollEvent(&event)) {
@@ -333,10 +334,10 @@ inline GameState RunGame(SDL_Renderer* renderer) {
                             quit = true;
                         } else if (event.type == SDL_KEYDOWN) {
                             if (event.key.keysym.sym == SDLK_r) {
-                                deathTime = 0; // reset để lần sau còn hoạt động
+                                deathTime = 0; 
                                 Stage = 0;
                                 MonsterCount = 0;
-                                return GameState::GAMEPLAY; // Restart game
+                                return GameState::GAMEPLAY;
                             } else if (event.key.keysym.sym == SDLK_ESCAPE) {
                                 Stage= 0;
                                 wait = false;
@@ -349,15 +350,12 @@ inline GameState RunGame(SDL_Renderer* renderer) {
             }
         }
         else {
-            deathTime = 0; // Nếu player chưa chết thì reset lại deathTime
+            deathTime = 0;
         }
                 
 
         player.renderBars(renderer); 
         player.renderAvatar(renderer);
-
-
-        cerr<<player.fireball.isCharged<<endl;
 
         SDL_RenderPresent(renderer); 
         SDL_Delay(10); 

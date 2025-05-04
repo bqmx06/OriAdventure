@@ -38,7 +38,7 @@ GameState ShowMenu(SDL_Renderer* renderer) {
         }
 
         
-        SDL_RenderCopy(renderer, bgTexture, nullptr, nullptr); // render ảnh nền full screen
+        SDL_RenderCopy(renderer, bgTexture, nullptr, nullptr); 
 
         playBtn.render(renderer);
         helpBtn.render(renderer);
